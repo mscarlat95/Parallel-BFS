@@ -1,12 +1,12 @@
 
 CC=g++
 CFLAGS=-g -Wall -Wextra
-#PFLAGS=
+PFLAGS=-lpthread
 
 all: bfs run
 
 bfs: bfs.cpp
-	$(CC) bfs.cpp  $(CFLAGS) -o bfs 
+	$(CC) bfs.cpp $(CFLAGS) $(PFLAGS) -o bfs 
 
 run:
 	./bfs
