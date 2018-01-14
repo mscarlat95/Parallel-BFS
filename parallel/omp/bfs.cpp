@@ -55,7 +55,7 @@ int main(int argc, char const *argv[])
 	omp_init_lock (&lck);
 
 	/* Create graph using the given input file */
-	FILE *fin = fopen ("bfs.in", "r");
+	FILE *fin = fopen ("../../bfs.in", "r");
 	DIE (fin == NULL, __LINE__, "Unable to open input file");
 
 	fscanf (fin, "%d", &nodesNum);

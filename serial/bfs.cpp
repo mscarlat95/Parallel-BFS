@@ -29,7 +29,7 @@ void display () {
 void init () {
 	int res, nodesNum, node1, node2;
 
-	FILE *fin = fopen ("bfs.in", "r");
+	FILE *fin = fopen ("../bfs.in", "r");
 	DIE (fin == NULL, __LINE__, "Unable to open input file");
 
 	fscanf (fin, "%d", &nodesNum);

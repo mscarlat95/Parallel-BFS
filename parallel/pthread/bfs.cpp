@@ -62,8 +62,8 @@ void *get_neighbors (void *args) {
 		}
 	}
 
-	printf("Thread %d has the following neighbors: ", th_info->id);
-	display_proc_neighbors (q_size, proc_queue);
+	// printf("Thread %d has the following neighbors: ", th_info->id);
+	// display_proc_neighbors (q_size, proc_queue);
 
 	/* Update global result */
 	pthread_mutex_lock(&mutex);	
@@ -92,7 +92,7 @@ int main(int argc, char const *argv[])
 	thread_info th_info[threads_num];
 
 	/**********************************************************************/
-	fin = fopen ("bfs.in", "r");
+	fin = fopen ("../../bfs.in", "r");
 	DIE (fin == NULL, __LINE__, "Unable to open input file");
 	/* Number of nodes */
 	fscanf (fin, "%d", &nodesNum);

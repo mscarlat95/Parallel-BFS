@@ -57,7 +57,7 @@ int main(int argc, char const *argv[])
 
 	/* Read input file using Thread 0 */
 	if (rank == 0) {
-		fin = fopen ("bfs.in", "r");
+		fin = fopen ("../../bfs.in", "r");
 		DIE (fin == NULL, __LINE__, "Unable to open input file");
 
 		/* Number of nodes */
@@ -98,8 +98,8 @@ int main(int argc, char const *argv[])
 			proc_queue[q_size ++] = i;
 		}
 	}
-	printf("Process %d has the following neighbors: ", rank);
-	display_proc_neighbors (q_size, proc_queue);
+	// printf("Process %d has the following neighbors: ", rank);
+	// display_proc_neighbors (q_size, proc_queue);
 
 
 	/* Synchronize before gathering the neighbors */

@@ -66,7 +66,7 @@ int main(int argc, char const *argv[])
 
 	/* Read input file using Thread 0 */
 	if (rank == 0) {
-		fin = fopen ("bfs.in", "r");
+		fin = fopen ("../../bfs.in", "r");
 		DIE (fin == NULL, __LINE__, "Unable to open input file");
 
 		/* Number of nodes */

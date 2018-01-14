@@ -9,7 +9,7 @@ bfs: bfs.cpp
 	$(CC) bfs.cpp $(CFLAGS) $(PFLAGS) -o bfs
 
 run: bfs
-	$(CE) -np 8 bfs
+	$(CE) -np ${ARGS} bfs
 
 .PHONY: clean
 
