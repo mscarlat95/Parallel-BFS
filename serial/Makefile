@@ -3,7 +3,7 @@ CC=g++
 CFLAGS=-g -Wall -Wextra
 #PFLAGS=
 
-all: bfs run
+all: bfs
 
 bfs: bfs.cpp
 	$(CC) bfs.cpp  $(CFLAGS) -o bfs 

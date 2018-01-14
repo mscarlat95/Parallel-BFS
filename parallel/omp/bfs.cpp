@@ -91,7 +91,7 @@ int main(int argc, char const *argv[])
 
 	/* Perform Breadth First Search */
 	printf("\nPerform BFS: ");
-	root = 1;
+	root = 0;
 	queue.push (root);
 	while (! queue.empty()) {
 	

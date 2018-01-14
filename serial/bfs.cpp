@@ -78,7 +78,7 @@ int main(void)
 	display();
 
 	printf("\nPerformed BFS: ");
-	bfs (1);
+	bfs (0);
 	printf("\n");
 
 	return 0;

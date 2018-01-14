@@ -80,8 +80,16 @@ int main(int argc, char const *argv[])
 {
 	FILE *fin = NULL;
 	int i, j, res, nodesNum, node1, node2, root;
-	pthread_t threads[NUM_THREADS];
-	thread_info th_info[NUM_THREADS];
+	int threads_num = NUM_THREADS;
+
+	switch (argc) {
+		case 1: threads_num = NUM_THREADS; break;
+		case 2:	threads_num = atoi (argv[1]); break;
+		default:	DIE (1, __LINE__, "Invalid number of arguments");
+	}
+
+	pthread_t threads[threads_num];
+	thread_info th_info[threads_num];
 
 	/**********************************************************************/
 	fin = fopen ("bfs.in", "r");
@@ -102,7 +110,7 @@ int main(int argc, char const *argv[])
 	printf("Created the following graph:\n");
 	display_all (nodesNum);
 	/* setup BFS source node */
-	root = 1;
+	root = 0;
 
 	/**********************************************************************/
 
@@ -111,7 +119,7 @@ int main(int argc, char const *argv[])
     DIE (res != 0, __LINE__, "pthread_mutex_init");
 
     /* Send one row to each thread*/
-	for (i = 0; i < NUM_THREADS; ++i) {
+	for (i = 0; i < threads_num; ++i) {
 
 		th_info[i].id = i;
 		th_info[i].len = nodesNum;
@@ -138,7 +146,7 @@ int main(int argc, char const *argv[])
 
 
 	printf("Perform BFS: %d ", root);
-	marked[root] = 0;
+	marked[root] = 1;
 	for (i = 0; i < MAX_QUEUE_SIZE * nodesNum; ++i) {
 		int done = 1;
 		for (j = 0; j < nodesNum && done; ++j) {

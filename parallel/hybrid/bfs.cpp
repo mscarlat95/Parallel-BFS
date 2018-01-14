@@ -50,8 +50,6 @@ int main(int argc, char const *argv[])
 	int i, res, nodesNum, node1, node2, root;
 	int rank = -1, nTasks = -1;
 
-	/* Setup number of threads */
-	omp_set_num_threads (NUM_THREADS);
 
 	/* Initialize MPI execution environment */
 	MPI_Init (&argc, (char ***) &argv);
@@ -60,114 +58,114 @@ int main(int argc, char const *argv[])
 	/* Gives the number of tasks */
 	MPI_Comm_size (MPI_COMM_WORLD, &nTasks);
 
+	/* Setup number of threads */
+	omp_set_num_threads (nTasks);
+
 
 	/* Assign one task to each thread */
-	if (nTasks == NUM_THREADS) {
 
-		/* Read input file using Thread 0 */
-		if (rank == 0) {
-			fin = fopen ("bfs.in", "r");
-			DIE (fin == NULL, __LINE__, "Unable to open input file");
+	/* Read input file using Thread 0 */
+	if (rank == 0) {
+		fin = fopen ("bfs.in", "r");
+		DIE (fin == NULL, __LINE__, "Unable to open input file");
 
-			/* Number of nodes */
-			fscanf (fin, "%d", &nodesNum);
-			DIE (nodesNum <= 0, __LINE__, "Invalid number of nodes");
-			while (fscanf (fin, "%d%d", &node1, &node2) != EOF) {
+		/* Number of nodes */
+		fscanf (fin, "%d", &nodesNum);
+		DIE (nodesNum <= 0, __LINE__, "Invalid number of nodes");
+		while (fscanf (fin, "%d%d", &node1, &node2) != EOF) {
 
-				/* Add adjacence <node1, node2> */
-				#pragma omp parallel sections 
+			/* Add adjacence <node1, node2> */
+			#pragma omp parallel sections 
+			{
+				#pragma omp section
 				{
-					#pragma omp section
-					{
-						adj_mat[node1*nodesNum + node2] = 1;
-					}
+					adj_mat[node1*nodesNum + node2] = 1;
+				}
 
-					#pragma omp section
-					{
-						adj_mat[node2*nodesNum + node1] = 1;
-					}
+				#pragma omp section
+				{
+					adj_mat[node2*nodesNum + node1] = 1;
 				}
 			}
-
-			res = fclose (fin);
-			DIE (res < 0, __LINE__, "Unable to close input file");
-		
-			/* Display edges */
-			printf("Created the following graph:\n");
-			display_all (nodesNum);
-
-			/* setup BFS source node */
-			root = 0;
 		}
 
-		/* Broadcast: number of nodes and source node */
-		MPI_Bcast (&nodesNum, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		MPI_Bcast (&root, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		res = fclose (fin);
+		DIE (res < 0, __LINE__, "Unable to close input file");
+	
+		/* Display edges */
+		printf("Created the following graph:\n");
+		display_all (nodesNum);
 
-		/* Scatter each row to each process */
-		MPI_Scatter (adj_mat, nodesNum , MPI_INT, proc_mat, nodesNum, MPI_INT, 0, MPI_COMM_WORLD);
-
-		/* Initialize process queue */
-		#pragma omp parallel for schedule (dynamic)
-		for (i = 0; i < MAX_QUEUE_SIZE; ++i) {
-			proc_queue[i] = -1; /*unset*/
-		}
-
-		/* Update process queue */
-		int q_size = 0;
-
-		#pragma omp parallel for schedule (dynamic)
-		for (i = 0; i < nodesNum; ++i) {
-			if (proc_mat[i] == 1) {
-				proc_queue[q_size ++] = i;
-			}
-		}
-		printf("Process %d has the following neighbors: ", rank);
-		display_proc_neighbors (q_size, proc_queue);
-
-
-		/* Synchronize before gathering the neighbors */
-		MPI_Barrier(MPI_COMM_WORLD);
-
-		/* Send all info to Process 0 */
-		MPI_Gather(proc_queue, MAX_QUEUE_SIZE, MPI_INT, result, MAX_QUEUE_SIZE, MPI_INT, 0, MPI_COMM_WORLD);
-
-		/* Initialize frequency array (marked nodes) */
-		#pragma omp parallel for schedule (dynamic)
-		for (i = 0; i < nodesNum; ++i) {
-			marked[i] = 0;
-		}
-
-		/* Compute BFS traversal in process 0 */
-		if (rank == 0) {
-
-			/* Setup omp lock */
-			omp_lock_t lck;
-			omp_init_lock (&lck);
-
-			printf("Perform BFS: %d ", root);
-			marked[root] = 1;
-
-			#pragma omp parallel for shared (lck) schedule (dynamic)
-			for (i = 0; i < MAX_QUEUE_SIZE * nodesNum; ++i) {
-				omp_set_lock (&lck);
-				if (result[i] != -1) { /* Neighbors available */
-					/* Update marked array */
-					if (!marked[result[i]]) {
-						printf("%d ", result[i]);
-						marked[result[i]] = 1; 
-					}
-				}
-				omp_unset_lock(&lck);
-
-			}
-			printf("\n");
-
-			omp_destroy_lock (&lck);
-		}
-	} else {
-		printf("Must specify %d processors\n", NUM_THREADS);
+		/* setup BFS source node */
+		root = 0;
 	}
+
+	/* Broadcast: number of nodes and source node */
+	MPI_Bcast (&nodesNum, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast (&root, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	/* Scatter each row to each process */
+	MPI_Scatter (adj_mat, nodesNum , MPI_INT, proc_mat, nodesNum, MPI_INT, 0, MPI_COMM_WORLD);
+
+	/* Initialize process queue */
+	#pragma omp parallel for schedule (dynamic)
+	for (i = 0; i < MAX_QUEUE_SIZE; ++i) {
+		proc_queue[i] = -1; /*unset*/
+	}
+
+	/* Update process queue */
+	int q_size = 0;
+
+	#pragma omp parallel for schedule (dynamic)
+	for (i = 0; i < nodesNum; ++i) {
+		if (proc_mat[i] == 1) {
+			proc_queue[q_size ++] = i;
+		}
+	}
+	printf("Process %d has the following neighbors: ", rank);
+	display_proc_neighbors (q_size, proc_queue);
+
+
+	/* Synchronize before gathering the neighbors */
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	/* Send all info to Process 0 */
+	MPI_Gather(proc_queue, MAX_QUEUE_SIZE, MPI_INT, result, MAX_QUEUE_SIZE, MPI_INT, 0, MPI_COMM_WORLD);
+
+	/* Initialize frequency array (marked nodes) */
+	#pragma omp parallel for schedule (dynamic)
+	for (i = 0; i < nodesNum; ++i) {
+		marked[i] = 0;
+	}
+
+	/* Compute BFS traversal in process 0 */
+	if (rank == 0) {
+
+		/* Setup omp lock */
+		omp_lock_t lck;
+		omp_init_lock (&lck);
+
+		printf("Perform BFS: %d ", root);
+		marked[root] = 1;
+
+		#pragma omp parallel for shared (lck) schedule (dynamic)
+		for (i = 0; i < MAX_QUEUE_SIZE * nodesNum; ++i) {
+			omp_set_lock (&lck);
+			if (result[i] != -1) { /* Neighbors available */
+				/* Update marked array */
+				if (!marked[result[i]]) {
+					printf("%d ", result[i]);
+					marked[result[i]] = 1; 
+				}
+			}
+			omp_unset_lock(&lck);
+
+		}
+		printf("\n");
+
+		omp_destroy_lock (&lck);
+	}
+
 
 	/* Terminates MPI execution environment */
 	MPI_Finalize();
